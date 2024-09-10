@@ -69,7 +69,7 @@ public class TodoServiceTests : IClassFixture<DatabaseFixture>
         using var context = _fixture.CreateContext();
         var todoService = new TodoService(context);
 
-        var result = await todoService.ListTodosForProjectAsync(DatabaseFixture.Project.Id, orderBy: "title");
+        var result = await todoService.ListTodosForProjectAsync(DatabaseFixture.Project.Id);
 
         result.Select(todo => todo.Title).Should().BeEquivalentTo(DatabaseFixture.TodoTitles.Order());
     }
@@ -80,9 +80,10 @@ public class TodoServiceTests : IClassFixture<DatabaseFixture>
         using var context = _fixture.CreateContext();
         var todoService = new TodoService(context);
 
-        var result = await todoService.ListTodosForProjectAsync(DatabaseFixture.Project.Id, orderBy: "title", limit: 5);
-
-        result.Select(todo => todo.Title).Should().BeEquivalentTo(DatabaseFixture.TodoTitles.Order().Take(5));
+        var result = await todoService.ListTodosForProjectAsync(DatabaseFixture.Project.Id, limit: 5);
+        var actual = result.Select(todo => todo.Title).ToList();
+        var expected = DatabaseFixture.TodoTitles.Order().Take(5).ToList();
+        actual.Should().BeEquivalentTo(expected);
     }
 
     [Fact]
@@ -91,7 +92,7 @@ public class TodoServiceTests : IClassFixture<DatabaseFixture>
         using var context = _fixture.CreateContext();
         var todoService = new TodoService(context);
 
-        var result = await todoService.ListTodosForProjectAsync(DatabaseFixture.Project.Id, orderBy: "title", limit: 5, offset: 5);
+        var result = await todoService.ListTodosForProjectAsync(DatabaseFixture.Project.Id, limit: 5, offset: 5);
 
         result.Select(todo => todo.Title).Should().BeEquivalentTo(DatabaseFixture.TodoTitles.Order().Skip(5).Take(5));
     }

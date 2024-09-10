@@ -80,9 +80,7 @@ public class TodoService
         Guid? creatorUserId = null,
         TodoStatus? status = null,
         int? limit = null,
-        int? offset = null,
-        string? orderBy = null,
-        bool? descending = false)
+        int? offset = null)
     {
         var query = _context.Todos.Where(t => t.ProjectId == projectId);
 
@@ -101,34 +99,19 @@ public class TodoService
             query = query.Where(t => t.Status == statusValue);
         }
 
-        if (limit.HasValue)
-        {
-            query = query.Take(limit.Value);
-        }
-
         if (offset.HasValue)
         {
             query = query.Skip(offset.Value);
         }
 
+        if (limit.HasValue)
+        {
+            query = query.Take(limit.Value);
+        }
+
         var todos = await query.ToListAsync();
 
-        if (orderBy != null)
-        {
-            Func<Todo, Object> keySelector = todo => orderBy switch
-            {
-                "title" => todo.Title,
-                "description" => todo.Description,
-                "status" => todo.Status,
-                "createdat" => todo.CreatedAt,
-                "updatedat" => todo.UpdatedAt,
-                _ => throw new ArgumentException($"Invalid orderBy value: {orderBy}", nameof(orderBy))
-            };
-            
-            todos = descending ?? false
-                ? todos.OrderByDescending(keySelector).ToList()
-                : todos.OrderBy(keySelector).ToList();
-        }
+        todos = todos.OrderBy(t => t.Title).ToList();
 
         return todos;
     }
