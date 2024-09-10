@@ -2,7 +2,7 @@ namespace Taskman.Tests.TestUtils
 {
     using Microsoft.EntityFrameworkCore;
     using Microsoft.Extensions.Configuration;
-    using Taskman.Infrastructure;
+    using Taskman.Db;
 
     public class DatabaseFixture
     {

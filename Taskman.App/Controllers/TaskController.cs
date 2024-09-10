@@ -1,3 +1,5 @@
+namespace Taskman.Controllers;
+
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Taskman;
@@ -13,29 +15,18 @@ using System.Threading.Tasks;
 [Authorize]  // Require authentication for all actions in this controller
 public class TaskController : ControllerBase
 {
-    private readonly TaskService _taskService;
+    private readonly TodoService _taskService;
 
-    public TaskController(TaskService taskService)
+    public TaskController(TodoService taskService)
     {
         _taskService = taskService;
-    }
-
-    private Guid GetAuthUserId()
-    {
-        var userIdClaim = User.FindFirst(JwtRegisteredClaimNames.Sub);
-        if (userIdClaim == null)
-        {
-            throw new UnauthorizedAccessException("User is not authenticated.");
-        }
-
-        return Guid.Parse(userIdClaim.Value);
     }
 
     // Create a new task
     [HttpPost]
     public async Task<IActionResult> CreateTask(Guid projectId, [FromBody] CreateTodoDto createTodoDto)
     {
-        var createdTask = await _taskService.CreateTodoAsync(createTodoDto, projectId, GetAuthUserId());
+        var createdTask = await _taskService.CreateTodoAsync(createTodoDto, projectId, UserId);
 
         return CreatedAtAction(nameof(GetTaskById), new { id = createdTask.Id }, createdTask);
     }
@@ -46,7 +37,7 @@ public class TaskController : ControllerBase
     {
         // Ensure the task exists and the current user has access
         try {
-            var task = await _taskService.UpdateTaskAsync(id, updateTodoDto);
+            var task = await _taskService.UpdateTodoAsync(id, updateTodoDto);
             
             return Ok(task);
         } catch (KeyNotFoundException) {
@@ -59,7 +50,7 @@ public class TaskController : ControllerBase
     public async Task<IActionResult> GetTaskById(Guid id)
     {
         try {
-            var task = await _taskService.GetTaskByIdAsync(id);
+            var task = await _taskService.GetTodoByIdAsync(id);
             return Ok(task);
         } catch (KeyNotFoundException) {
             return NotFound("Task not found.");
@@ -71,7 +62,7 @@ public class TaskController : ControllerBase
     public async Task<IActionResult> DeleteTask(Guid id)
     {
          try {
-            var success = await _taskService.DeleteTaskAsync(id);
+            var success = await _taskService.DeleteTodoAsync(id);
             if (!success)
             {
                 return NotFound("Task not found or already deleted.");
@@ -95,7 +86,7 @@ public class TaskController : ControllerBase
 
         if (projects.Any(p => p.Value == projectId.ToString()))
         {
-            var tasks = await _taskService.ListTasksForProjectAsync(projectId, assignedUserId, creatorUserId, status);
+            var tasks = await _taskService.ListTodosForProjectAsync(projectId, assignedUserId, creatorUserId, status);
             return Ok(tasks);
         }
         return Unauthorized("User does not have access to this project.");

@@ -1,4 +1,4 @@
-namespace Taskman.Infrastructure;
+namespace Taskman.Db;
 
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;

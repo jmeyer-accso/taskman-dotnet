@@ -1,11 +1,11 @@
+namespace Taskman.Controllers;
+
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System;
 using System.Threading.Tasks;
-using System.Security.Claims;
 using Taskman.Services;
 using Taskman.Models;
-using System.IdentityModel.Tokens.Jwt;
 
 [ApiController]
 [Route("api/[controller]")]
@@ -13,28 +13,19 @@ using System.IdentityModel.Tokens.Jwt;
 public class ProjectController : ControllerBase
 {
     private readonly ProjectService _projectService;
+    private readonly IAuthorizationService _authService;
 
-    public ProjectController(ProjectService projectService)
+    public ProjectController(ProjectService projectService, IAuthorizationService authService)
     {
         _projectService = projectService;
-    }
-
-    private Guid GetAuthUserId()
-    {
-        var userIdClaim = User.FindFirst(JwtRegisteredClaimNames.Sub);
-        if (userIdClaim == null)
-        {
-            throw new UnauthorizedAccessException("User is not authenticated.");
-        }
-
-        return Guid.Parse(userIdClaim.Value);
+        _authService = authService;
     }
 
     // 1. Create a new project
     [HttpPost]
     public async Task<IActionResult> CreateProject([FromBody] CreateProjectDto data)
     {
-        var createdProject = await _projectService.CreateProjectAsync(data, GetAuthUserId());
+        var createdProject = await _projectService.CreateProjectAsync(data, UserId);
 
         return CreatedAtAction(nameof(GetProjectById), new { id = createdProject.Id }, createdProject);
     }
@@ -48,6 +39,13 @@ public class ProjectController : ControllerBase
         {
             return NotFound("Project not found.");
         }
+        var authResult = await _authService.AuthorizeAsync(User, project, "ProjectMember");
+
+        if (!authResult.Succeeded)
+        {
+            return Forbid("You do not have permission to view this project.");
+        }
+
         return Ok(project);
     }
 
@@ -55,8 +53,6 @@ public class ProjectController : ControllerBase
     [HttpPost("{projectId}/members")]
     public async Task<IActionResult> AddMemberToProject(Guid projectId, [FromBody] AddMemberDto addMemberDto)
     {
-        Guid ownerId = GetAuthUserId();
-
         // Verify the current user is the owner of the project
         var project = await _projectService.GetProjectByIdAsync(projectId);
         if (project == null)
@@ -64,7 +60,7 @@ public class ProjectController : ControllerBase
             return NotFound("Project not found.");
         }
 
-        if (project.Owner.Id != ownerId)
+        if (project.Owner.Id != UserId)
         {
             return Forbid("You do not have permission to add members to this project.");
         }

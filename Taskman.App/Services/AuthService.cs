@@ -1,4 +1,4 @@
-using Taskman.Infrastructure;
+using Taskman.Db;
 using Microsoft.EntityFrameworkCore;
 using Taskman.Models;
 using BCrypt.Net;
@@ -28,7 +28,7 @@ public class AuthService
 
         var user = new User
         {
-            Username = userDto.Username,
+            UserName = userDto.Username,
             Email = userDto.Email,
             Password = userDto.Password
         };
@@ -41,7 +41,7 @@ public class AuthService
 
     public async Task<string> LoginUserAsync(UserLoginDto loginDto)
     {
-        var user = await _context.Users.SingleOrDefaultAsync(u => u.Username == loginDto.Username);
+        var user = await _context.Users.SingleOrDefaultAsync(u => u.UserName == loginDto.Username);
         if (user == null || loginDto.Password != user.Password)
             throw new Exception("Invalid email or password");
 

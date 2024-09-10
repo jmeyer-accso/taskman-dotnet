@@ -1,4 +1,4 @@
-
+namespace Taskman.Controllers;
 
 using Microsoft.AspNetCore.Mvc;
 using Taskman.Models;
@@ -21,7 +21,7 @@ public class AuthController : ControllerBase
         try
         {
             var user = await _userService.RegisterUserAsync(userDto);
-            return Ok(new { user.Id, user.Username, user.Email });
+            return Ok(new { user.Id, user.UserName, user.Email });
         }
         catch (Exception ex)
         {

@@ -4,7 +4,6 @@ namespace Taskman.Models;
 
 public class User : IdentityUser<Guid>
 {
-    public required string Username { get; set; }
     public required string Password { get; set; }
 
     public ICollection<Project> OwnedProjects { get; set; } = new List<Project>();
